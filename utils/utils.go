@@ -176,3 +176,13 @@ func AssignId(parentId string) string { // TODO clean and optimize
 		return parentTodo.Id + "-" + strconv.Itoa(len(idList)+1)
 	}
 }
+
+func ChangeTodoState(state bool, todoId string) {
+	todos := GetTodos()
+	todo, err := getTodoRecursive(todoId, todos)
+	if err != nil {
+		log.Fatal(err)
+	}
+	todo.IsDone = state
+	saveTodos(todos)
+}
