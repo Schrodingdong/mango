@@ -14,23 +14,13 @@ import (
 
 var PATH_TO_TODOS string = "./todos.json"
 
-func GetTodo(id string) (*Todo, error) {
-	todos := GetTodos()
-	todo, err := getTodoRecursive(id, todos)
-	if err != nil {
-		return nil, err
-	} else {
-		return todo, nil
-	}
-}
-
-func getTodoRecursive(id string, todos *TodoList) (*Todo, error) {
+func GetTodo(id string, todos *TodoList) (*Todo, error) {
 	for i := 0; i < len(*todos); i++ {
 		if (*todos)[i].Id == id {
 			return (*todos)[i], nil
 		}
 		if len(*(*todos)[i].Todos) != 0 {
-			todo, err := getTodoRecursive(id, (*todos)[i].Todos)
+			todo, err := GetTodo(id, (*todos)[i].Todos)
 			if err == nil {
 				return todo, nil
 			}
@@ -53,7 +43,8 @@ func GetTodos() *TodoList {
 	return &todos
 }
 
-func saveTodos(todos *TodoList) {
+func SaveTodos(todos *TodoList) {
+	todos = TidyTodos(todos)
 	// json byte representation
 	v, err := json.Marshal(todos)
 	if err != nil {
@@ -70,25 +61,19 @@ func saveTodos(todos *TodoList) {
 	f.Write(indentedData.Bytes())
 }
 
-func AddTodo(todo *Todo, parentId string) {
-	todos := GetTodos()
-	if len(parentId) == 0 {
-		newTodos := append(*todos, todo)
-		todos = &newTodos
-	} else {
-		parentTodo, err := getTodoRecursive(parentId, todos)
-		if err != nil {
-			log.Fatal(err)
-		}
-		parentTodo.AddTodo(todo)
-	}
-	saveTodos(todos)
+/*
+Add todo to the slice provided, and returns a copy of the slice with that todo
+*/
+func AddTodo(todo *Todo, todos *TodoList) *TodoList {
+	newTodos := make(TodoList, len(*todos))
+	copy(newTodos, *todos)
+	newTodos = append(newTodos, todo)
+	return &newTodos
 }
 
 func AssignId(parentId string) string { // TODO clean and optimize
+	todos := GetTodos()
 	if len(parentId) == 0 {
-		todos := GetTodos()
-
 		// get ID list
 		idList := make([]string, 0)
 		for i := 0; i < len(*todos); i++ {
@@ -126,7 +111,7 @@ func AssignId(parentId string) string { // TODO clean and optimize
 
 	} else {
 		// Search for the parent
-		parentTodo, err := GetTodo(parentId)
+		parentTodo, err := GetTodo(parentId, todos)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -177,12 +162,42 @@ func AssignId(parentId string) string { // TODO clean and optimize
 	}
 }
 
-func ChangeTodoState(state bool, todoId string) {
-	todos := GetTodos()
-	todo, err := getTodoRecursive(todoId, todos)
-	if err != nil {
-		log.Fatal(err)
-	}
+func ChangeTodoState(state bool, todo *Todo) {
 	todo.IsDone = state
-	saveTodos(todos)
+}
+
+func DeleteTodo(todoId string, todos *TodoList) *TodoList {
+	newTodos := make(TodoList, 0)
+	for i := 0; i < len(*todos); i++ {
+		todo := (*todos)[i]
+		if todo.Id == todoId {
+			continue
+		}
+		if len(*todo.Todos) != 0 {
+			todo.Todos = DeleteTodo(todoId, todo.Todos)
+		}
+		newTodos = append(newTodos, todo)
+	}
+	return &newTodos
+}
+
+func TidyTodos(todos *TodoList) *TodoList {
+	todos = todos.SortByDeadline()
+	newTodos := make(TodoList, 0)
+	for i := 0; i < len(*todos); i++ {
+		todo := (*todos)[i]
+		splits := strings.Split(todo.Id, "-")
+		prefixPart := strings.Join(splits[:len(splits)-1], "-")
+		if len(prefixPart) != 0 {
+			prefixPart = prefixPart + "-"
+		} else {
+			prefixPart = ""
+		}
+		todo.Id = prefixPart + strconv.Itoa(i+1)
+		if len(*todo.Todos) != 0 {
+			todo.Todos = TidyTodos(todo.Todos)
+		}
+		newTodos = append(newTodos, todo)
+	}
+	return &newTodos
 }

@@ -7,29 +7,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var sike bool
-
 func init() {
-	doneCmd.PersistentFlags().BoolVar(&sike, "sike", false, "Un-done-ify the todo")
-	rootCmd.AddCommand(doneCmd)
+	rootCmd.AddCommand(deleteCmd)
 }
 
-var doneCmd = &cobra.Command{
-	Use:   "done",
-	Short: "Mark a todo as 'done'",
+var deleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete the todo",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			log.Fatal("Command require a positional argument <todo_id>")
 		}
 		todoId := args[0]
 		todos := utils.GetTodos()
-
-		todo, err := utils.GetTodo(todoId, todos)
-		if err != nil {
-			log.Fatal(err)
-		}
-		todo.IsDone = !sike
-
+		todos = utils.DeleteTodo(todoId, todos)
 		utils.SaveTodos(todos)
 	},
 }

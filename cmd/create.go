@@ -42,13 +42,24 @@ var createCmd = &cobra.Command{
 			Todos:       &utils.TodoList{},
 		}
 		todo.Id = utils.AssignId(parentId)
-		utils.AddTodo(&todo, parentId)
+
+		todos := utils.GetTodos()
+		if len(parentId) == 0 {
+			todos = utils.AddTodo(&todo, todos)
+		} else {
+			parentTodo, err := utils.GetTodo(parentId, todos)
+			if err != nil {
+				log.Fatal(err)
+			}
+			parentTodo.Todos = utils.AddTodo(&todo, parentTodo.Todos)
+		}
+		utils.SaveTodos(todos)
 		todo.PrintTodoDetail()
 	},
 }
 
 func parseDeadline(deadlineString string) time.Time {
-	deadline, err := time.Parse(time.DateTime, deadlineString)
+	deadline, err := time.ParseInLocation(time.DateTime, deadlineString, time.Local)
 	if err != nil {
 		return zero
 	}

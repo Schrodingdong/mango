@@ -21,7 +21,6 @@ var listCmd = &cobra.Command{
 	Long:  "Print all the todos",
 	Run: func(cmd *cobra.Command, args []string) {
 		todos := utils.GetTodos()
-		todos = todos.SortByDeadline()
 		printTodos(todos)
 	},
 }
