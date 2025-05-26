@@ -28,6 +28,16 @@ func (todo *Todo) AddTodo(subtodo *Todo) {
 	}
 }
 
+func (todo *Todo) ChangeStatus(status bool) {
+	todo.IsDone = status
+	if status {
+		for i := 0; i < len(*todo.Todos); i++ {
+			t := (*todo.Todos)[i]
+			t.ChangeStatus(status)
+		}
+	}
+}
+
 func (todo *Todo) PrintTodoDetail() {
 	s := fmt.Sprintf(`
 Todo '%s':

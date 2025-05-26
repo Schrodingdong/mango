@@ -28,7 +28,7 @@ var doneCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		todo.IsDone = !sike
+		todo.ChangeStatus(!sike)
 
 		utils.SaveTodos(todos)
 	},
