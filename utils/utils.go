@@ -4,15 +4,37 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-var PATH_TO_TODOS string = "./todos.json"
+var HOME_DIR string = os.Getenv("HOME")
+var MANGO_CONFIG_DIR string = path.Join(HOME_DIR, ".config", "mango")
+var PATH_TO_TODOS string = path.Join(MANGO_CONFIG_DIR, "todos.json")
+
+func CreateConfigFile() {
+	if _, err := os.Stat(MANGO_CONFIG_DIR); err != nil {
+		err := os.Mkdir(MANGO_CONFIG_DIR, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if _, err := os.Stat(PATH_TO_TODOS); err != nil {
+		file, err := os.Create(PATH_TO_TODOS)
+		if err != nil {
+			log.Fatal(err)
+		}
+		file.Write(bytes.NewBufferString("[]").Bytes())
+		fmt.Println("Initialized mango data")
+	}
+}
 
 func GetTodo(id string, todos *TodoList) (*Todo, error) {
 	for i := 0; i < len(*todos); i++ {
@@ -53,7 +75,7 @@ func SaveTodos(todos *TodoList) {
 	var indentedData bytes.Buffer
 	json.Indent(&indentedData, v, "", "    ")
 	// Create / Open file
-	f, err := os.Create("./todos.json")
+	f, err := os.Create(PATH_TO_TODOS)
 	if err != nil {
 		log.Fatal(err)
 	}

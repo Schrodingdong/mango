@@ -1,13 +1,12 @@
 package main
 
 import (
-	"os"
-
 	"github.com/schrodingdong/mango/cmd"
+	"github.com/schrodingdong/mango/utils"
 )
 
 func init() {
-	os.Setenv("TZ", "Africa/Casablanca")
+	utils.CreateConfigFile()
 }
 
 func main() {
