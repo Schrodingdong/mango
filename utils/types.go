@@ -51,6 +51,18 @@ Todo '%s':
 	fmt.Println(s)
 }
 
+func formatTime(d time.Duration) string {
+	minutes := int(d.Abs().Minutes())
+	if minutes < 60 {
+		return fmt.Sprintf("%dm", minutes)
+	}
+	hours := minutes / 60
+	if hours < 24 {
+		return fmt.Sprintf("%dh", hours)
+	}
+	return fmt.Sprintf("%dd", hours/24)
+}
+
 func (todo *Todo) PrintTodo() {
 	spacing := strings.Repeat("\t", strings.Count(todo.Id, "-"))
 	isDone := "- [ ]"
@@ -62,10 +74,12 @@ func (todo *Todo) PrintTodo() {
 	deadline := ""
 	if !todo.Deadline.IsZero() {
 		timeLeft := time.Until(todo.Deadline)
-		if timeLeft < 1*time.Hour {
-			deadline = "@ /!\\ " + timeLeft.String() + " left"
+		if timeLeft < 0 {
+			deadline = "[OVERDUE " + formatTime(timeLeft) + "]"
+		} else if timeLeft < 1*time.Hour {
+			deadline = "[" + formatTime(timeLeft) + " left]"
 		} else if timeLeft < 24*time.Hour {
-			deadline = "@ " + timeLeft.String() + " left"
+			deadline = "[" + formatTime(timeLeft) + " left]"
 		}
 	}
 	fmt.Println(spacing, isDone, id, title, deadline)
@@ -79,7 +93,9 @@ func (todos TodoList) SortByDeadline() *TodoList {
 	sort.Slice(sortedTodos, func(i, j int) bool {
 		t1 := sortedTodos[i]
 		t2 := sortedTodos[j]
-		return t1.Deadline.Before(t2.Deadline)
+		timeUntilT1 := time.Until(t1.Deadline).Abs()
+		timeUntilT2 := time.Until(t2.Deadline).Abs()
+		return timeUntilT1 < timeUntilT2
 	})
 	return &sortedTodos
 }
@@ -102,6 +118,9 @@ func (todos TodoList) FilterTodosUrgent() *TodoList {
 	filteredTodos := TodoList{}
 	for i := 0; i < len(todos); i++ {
 		todo := (todos)[i]
+		if todo.Deadline.IsZero() {
+			continue
+		}
 		if time.Until(todo.Deadline) < urgentThreshold {
 			filteredTodos = append(filteredTodos, todo)
 		}

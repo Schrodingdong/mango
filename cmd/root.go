@@ -7,11 +7,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Common flags
+var isDone bool
+
 var rootCmd = &cobra.Command{
 	Use:   "mango",
 	Short: "Todo manager for busys terminal users",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Mango - The todo manager for busy terminal users !")
+		fmt.Println(`
+Mango - The todo manager for busy terminal users
+usage: mango create "My todo"
+		`)
+
 		fmt.Println("To list the todos: mango list")
 		fmt.Println("To Create a todo: mango create")
 	},

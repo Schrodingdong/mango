@@ -101,8 +101,7 @@ func AddTodo(todo *Todo, todos *TodoList) *TodoList {
 	return &newTodos
 }
 
-func AssignId(parentId string) string { // TODO clean and optimize
-	todos := GetTodos()
+func AssignId(parentId string, todos *TodoList) string { // TODO clean and optimize
 	if len(parentId) == 0 {
 		// get ID list
 		idList := make([]string, 0)
@@ -212,7 +211,10 @@ func DeleteTodo(todoId string, todos *TodoList) *TodoList {
 }
 
 func TidyTodos(todos *TodoList) *TodoList {
+	// Sort by deaddline
 	todos = todos.SortByDeadline()
+
+	// Reassign ids
 	newTodos := make(TodoList, 0)
 	for i := 0; i < len(*todos); i++ {
 		todo := (*todos)[i]

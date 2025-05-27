@@ -7,8 +7,6 @@ import (
 
 var isUrgent bool
 
-// var isDone bool
-
 func init() {
 	listCmd.PersistentFlags().BoolVar(&isUrgent, "urgent", false, "List urgent todos")
 	listCmd.PersistentFlags().BoolVar(&isDone, "done", false, "List done todos")
@@ -21,18 +19,17 @@ var listCmd = &cobra.Command{
 	Long:  "Print all the todos",
 	Run: func(cmd *cobra.Command, args []string) {
 		todos := utils.GetTodos()
+		if isUrgent {
+			todos = todos.FilterTodosUrgent()
+		}
+		if isDone {
+			todos = todos.FilterTodosDone()
+		}
 		printTodos(todos)
 	},
 }
 
 func printTodos(todos *utils.TodoList) {
-	if isUrgent {
-		todos = todos.FilterTodosUrgent()
-	}
-	if isDone {
-		todos = todos.FilterTodosDone()
-	}
-
 	for i := 0; i < len(*todos); i++ {
 		todo := (*todos)[i]
 		todo.PrintTodo()
