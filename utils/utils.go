@@ -15,11 +15,21 @@ import (
 )
 
 var HOME_DIR string = os.Getenv("HOME")
-var MANGO_CONFIG_DIR string = path.Join(HOME_DIR, ".config", "mango")
+var CONFIG_DIR string = path.Join(HOME_DIR, ".config")
+var MANGO_CONFIG_DIR string = path.Join(CONFIG_DIR, "mango")
 var PATH_TO_TODOS string = path.Join(MANGO_CONFIG_DIR, "todos.json")
 
 func CreateConfigFile() {
+	if _, err := os.Stat(CONFIG_DIR); err != nil {
+		fmt.Println("Creating", CONFIG_DIR)
+		err := os.Mkdir(CONFIG_DIR, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	if _, err := os.Stat(MANGO_CONFIG_DIR); err != nil {
+		fmt.Println("Creating", MANGO_CONFIG_DIR)
 		err := os.Mkdir(MANGO_CONFIG_DIR, 0755)
 		if err != nil {
 			log.Fatal(err)
@@ -27,12 +37,13 @@ func CreateConfigFile() {
 	}
 
 	if _, err := os.Stat(PATH_TO_TODOS); err != nil {
+		fmt.Println("Creating", PATH_TO_TODOS)
 		file, err := os.Create(PATH_TO_TODOS)
 		if err != nil {
 			log.Fatal(err)
 		}
 		file.Write(bytes.NewBufferString("[]").Bytes())
-		fmt.Println("Initialized mango data")
+		fmt.Println("Initialized mango data !")
 	}
 }
 
@@ -68,19 +79,16 @@ func GetTodos() *TodoList {
 func SaveTodos(todos *TodoList) {
 	todos = TidyTodos(todos)
 	// json byte representation
-	v, err := json.Marshal(todos)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var indentedData bytes.Buffer
-	json.Indent(&indentedData, v, "", "    ")
-	// Create / Open file
-	f, err := os.Create(PATH_TO_TODOS)
+	indentedTodos, err := json.MarshalIndent(todos, "", "    ")
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Save to file
-	f.Write(indentedData.Bytes())
+	f, err := os.Create(PATH_TO_TODOS)
+	if err != nil {
+		log.Fatal(err)
+	}
+	f.Write(indentedTodos)
 }
 
 /*
