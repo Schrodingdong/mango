@@ -32,7 +32,7 @@ var listCmd = &cobra.Command{
 func printTodos(todos *utils.TodoList) {
 	for i := 0; i < len(*todos); i++ {
 		todo := (*todos)[i]
-		todo.PrintTodo()
+		todo.PrintTodoOneLine()
 		if len(*todo.Todos) != 0 {
 			printTodos(todo.Todos)
 		}

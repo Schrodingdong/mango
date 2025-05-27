@@ -210,14 +210,40 @@ func DeleteTodo(todoId string, todos *TodoList) *TodoList {
 	return &newTodos
 }
 
-func TidyTodos(todos *TodoList) *TodoList {
+/*
+This function is ran every time we want to save the data.
+It will ensure that :
+- The pending todos will be at the top, and the done todos at the bottom
+- For the pending todos, they will get sorted by deadline ascending, and the ones without deadline at the bottom
+- It will also reassign the IDs of the todos in a ascending order
+*/
+func TidyTodos(todos *TodoList) *TodoList { // TODO to optimize
+	var newTodos TodoList
+	doneTodos := make(TodoList, 0)
+	notDoneTodos := make(TodoList, 0)
+
 	// Sort by deaddline
 	todos = todos.SortByDeadline()
 
-	// Reassign ids
-	newTodos := make(TodoList, 0)
+	// Segregate todos
 	for i := 0; i < len(*todos); i++ {
 		todo := (*todos)[i]
+		if todo.IsDone {
+			doneTodos = append(doneTodos, todo)
+		} else {
+			notDoneTodos = append(notDoneTodos, todo)
+		}
+	}
+
+	// Merge
+	newTodos = notDoneTodos
+	for i := range len(doneTodos) {
+		newTodos = append(newTodos, doneTodos[i])
+	}
+
+	// Reassign ids
+	for i := 0; i < len(*todos); i++ {
+		todo := newTodos[i]
 		splits := strings.Split(todo.Id, "-")
 		prefixPart := strings.Join(splits[:len(splits)-1], "-")
 		if len(prefixPart) != 0 {
@@ -229,7 +255,7 @@ func TidyTodos(todos *TodoList) *TodoList {
 		if len(*todo.Todos) != 0 {
 			todo.Todos = TidyTodos(todo.Todos)
 		}
-		newTodos = append(newTodos, todo)
 	}
+
 	return &newTodos
 }

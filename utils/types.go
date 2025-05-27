@@ -39,19 +39,37 @@ func (todo *Todo) ChangeStatus(status bool) {
 }
 
 func (todo *Todo) PrintTodoDetail() {
-	s := fmt.Sprintf(`
-Todo '%s':
-    id: %s
-    title: %s
-    description: %s
-    isDone: %t
-    deadline: %v
-	`, todo.Title, todo.Id, todo.Title, todo.Description, todo.IsDone, todo.Deadline)
+	// Format status with emoji
+	status := "Done"
+	if !todo.IsDone {
+		status = "X Not Done"
+	}
 
-	fmt.Println(s)
+	// Format deadline nicely
+	deadlineStr := "No deadline"
+	if !todo.Deadline.IsZero() {
+		deadlineStr = todo.Deadline.Local().String()
+	}
+
+	// Build the output with consistent indentation
+	output := fmt.Sprintf(`
++ Todo: %s
+├── ID:          %s
+├── Status:      %s
+├── Description: %s
+└── Deadline:    %s
+`,
+		todo.Title,
+		todo.Id,
+		status,
+		todo.Description,
+		deadlineStr,
+	)
+
+	fmt.Println(output)
 }
 
-func formatTime(d time.Duration) string {
+func formatDuration(d time.Duration) string {
 	minutes := int(d.Abs().Minutes())
 	if minutes < 60 {
 		return fmt.Sprintf("%dm", minutes)
@@ -63,39 +81,53 @@ func formatTime(d time.Duration) string {
 	return fmt.Sprintf("%dd", hours/24)
 }
 
-func (todo *Todo) PrintTodo() {
-	spacing := strings.Repeat("\t", strings.Count(todo.Id, "-"))
+func (todo *Todo) PrintTodoOneLine() {
 	isDone := "- [ ]"
-	if todo.IsDone {
-		isDone = "- [x]"
-	}
+	deadline := ""
+	spacing := strings.Repeat("\t", strings.Count(todo.Id, "-"))
+
 	id := todo.Id
 	title := todo.Title
-	deadline := ""
-	if !todo.Deadline.IsZero() {
-		timeLeft := time.Until(todo.Deadline)
-		if timeLeft < 0 {
-			deadline = "[OVERDUE " + formatTime(timeLeft) + "]"
-		} else if timeLeft < 1*time.Hour {
-			deadline = "[" + formatTime(timeLeft) + " left]"
-		} else if timeLeft < 24*time.Hour {
-			deadline = "[" + formatTime(timeLeft) + " left]"
+	if todo.IsDone {
+		isDone = "- [x]"
+	} else {
+		if !todo.Deadline.IsZero() {
+			timeLeft := time.Until(todo.Deadline)
+			if timeLeft < 0 {
+				deadline = "[OVERDUE " + formatDuration(timeLeft) + "]"
+			} else if timeLeft < 1*time.Hour {
+				deadline = "[" + formatDuration(timeLeft) + " left]"
+			} else if timeLeft < 24*time.Hour {
+				deadline = "[" + formatDuration(timeLeft) + " left]"
+			}
 		}
 	}
-	fmt.Println(spacing, isDone, id, title, deadline)
+	formatString := "%s %s %3s %-32s %s\n"
+	fmt.Printf(
+		formatString,
+		spacing, isDone, id, title, deadline,
+	)
 }
 
 type TodoList []*Todo
 
-func (todos TodoList) SortByDeadline() *TodoList {
-	var sortedTodos = make(TodoList, len(todos))
-	copy(sortedTodos, todos)
+func (todos *TodoList) SortByDeadline() *TodoList {
+	var sortedTodos = make(TodoList, len(*todos))
+	copy(sortedTodos, *todos)
 	sort.Slice(sortedTodos, func(i, j int) bool {
 		t1 := sortedTodos[i]
 		t2 := sortedTodos[j]
-		timeUntilT1 := time.Until(t1.Deadline).Abs()
-		timeUntilT2 := time.Until(t2.Deadline).Abs()
-		return timeUntilT1 < timeUntilT2
+
+		// Todos without deadlines
+		if t1.Deadline.IsZero() {
+			return false
+		}
+		if t2.Deadline.IsZero() {
+			return true
+		}
+
+		// Compare deadlines directly (oldest first)
+		return t1.Deadline.Before(t2.Deadline)
 	})
 	return &sortedTodos
 }
