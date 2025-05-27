@@ -39,13 +39,18 @@ func (todo *Todo) ChangeStatus(status bool) {
 }
 
 func (todo *Todo) PrintTodoDetail() {
-	// Format status with emoji
-	status := "Done"
+	// Prefix
+	spaceCount := strings.Count(todo.Id, "-")
+	indentSpaceCount := 4
+	prefix := strings.Repeat(" ", spaceCount*indentSpaceCount)
+
+	// Format status
+	status := "[ ]"
 	if !todo.IsDone {
-		status = "X Not Done"
+		status = "[X]"
 	}
 
-	// Format deadline nicely
+	// Format deadline
 	deadlineStr := "No deadline"
 	if !todo.Deadline.IsZero() {
 		deadlineStr = todo.Deadline.Local().String()
@@ -53,16 +58,18 @@ func (todo *Todo) PrintTodoDetail() {
 
 	// Build the output with consistent indentation
 	output := fmt.Sprintf(`
-+ Todo: %s
-├── ID:          %s
-├── Status:      %s
-├── Description: %s
-└── Deadline:    %s
-`,
-		todo.Title,
-		todo.Id,
+%s- %s Todo: %s
+%s  ├── ID:          %s
+%s  ├── Description: %s
+%s  └── Deadline:    %s`,
+		prefix,
 		status,
+		todo.Title,
+		prefix,
+		todo.Id,
+		prefix,
 		todo.Description,
+		prefix,
 		deadlineStr,
 	)
 

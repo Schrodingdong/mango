@@ -9,6 +9,7 @@ import (
 
 // Common flags
 var isDone bool
+var verbose bool
 
 var rootCmd = &cobra.Command{
 	Use:   "mango",
