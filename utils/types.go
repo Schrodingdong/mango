@@ -106,23 +106,21 @@ func formatDuration(d time.Duration) string {
 }
 
 func (todo *Todo) PrintTodoOneLine() {
-	isDone := "- [ ]"
+	isDone := "\033[31m- [ ]\033[0m" // Red for incomplete
 	deadline := ""
 	spacing := strings.Repeat("\t", strings.Count(todo.Id, "-"))
 
 	id := todo.Id
 	title := todo.Title
 	if todo.IsDone {
-		isDone = "- [x]"
+		isDone = "\033[32m- [✓]\033[0m" // Green for complete
 	} else {
 		if !todo.Deadline.IsZero() {
 			timeLeft := time.Until(todo.Deadline)
 			if timeLeft < 0 {
-				deadline = "[OVERDUE " + formatDuration(timeLeft) + "]"
-			} else if timeLeft < 1*time.Hour {
-				deadline = "[" + formatDuration(timeLeft) + " left]"
+				deadline = "\033[31m[OVERDUE " + formatDuration(timeLeft) + "]\033[0m"
 			} else if timeLeft < 24*time.Hour {
-				deadline = "[" + formatDuration(timeLeft) + " left]"
+				deadline = "\033[02m[" + formatDuration(timeLeft) + " left]\033[0m"
 			}
 		}
 	}
