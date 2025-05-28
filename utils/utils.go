@@ -195,15 +195,15 @@ func ChangeTodoState(state bool, todo *Todo) {
 	todo.IsDone = state
 }
 
-func DeleteTodo(todoId string, todos *TodoList) *TodoList {
+func DeleteTodos(todoIds []string, todos *TodoList) *TodoList {
 	newTodos := make(TodoList, 0)
 	for i := 0; i < len(*todos); i++ {
 		todo := (*todos)[i]
-		if todo.Id == todoId {
+		if slices.Contains(todoIds, todo.Id) {
 			continue
 		}
 		if len(*todo.Todos) != 0 {
-			todo.Todos = DeleteTodo(todoId, todo.Todos)
+			todo.Todos = DeleteTodos(todoIds, todo.Todos)
 		}
 		newTodos = append(newTodos, todo)
 	}

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/schrodingdong/mango/utils"
@@ -18,9 +19,10 @@ var deleteCmd = &cobra.Command{
 		if len(args) == 0 {
 			log.Fatal("Command require a positional argument <todo_id>")
 		}
-		todoId := args[0]
 		todos := utils.GetTodos()
-		todos = utils.DeleteTodo(todoId, todos)
+		todoIds := args
+		todos = utils.DeleteTodos(todoIds, todos)
 		utils.SaveTodos(todos)
+		fmt.Println("Deleted: ", todoIds)
 	},
 }
