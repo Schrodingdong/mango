@@ -18,6 +18,23 @@ type Todo struct {
 	Todos       *TodoList
 }
 
+/*
+Given subtodos, Ensures parent deadline has the latest deadline of its sub todos
+*/
+func (todo *Todo) AdaptDeadlines() {
+	if todo.Todos == nil || len(*todo.Todos) == 0 {
+		return
+	}
+	latestDeadline := todo.Deadline
+	for _, el := range *todo.Todos {
+		if latestDeadline.After(el.Deadline) {
+			latestDeadline = el.Deadline
+		}
+	}
+	fmt.Println(latestDeadline)
+	todo.Deadline = latestDeadline
+}
+
 func (todo *Todo) AddTodo(subtodo *Todo) {
 	subTodoSlice := append(*(todo.Todos), subtodo)
 	todo.Todos = &subTodoSlice

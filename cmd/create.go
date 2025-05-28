@@ -61,6 +61,7 @@ var createCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 			parentTodo.Todos = utils.AddTodo(&todo, parentTodo.Todos)
+			parentTodo.AdaptDeadlines()
 		}
 		utils.SaveTodos(todos)
 

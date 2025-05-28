@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -217,7 +218,11 @@ It will ensure that :
 - For the pending todos, they will get sorted by deadline ascending, and the ones without deadline at the bottom
 - It will also reassign the IDs of the todos in a ascending order
 */
-func TidyTodos(todos *TodoList) *TodoList { // TODO to optimize
+func TidyTodos(todos *TodoList) *TodoList {
+	return tidyTodos(todos, "")
+}
+
+func tidyTodos(todos *TodoList, parentId string) *TodoList { // TODO to optimize
 	var newTodos TodoList
 	doneTodos := make(TodoList, 0)
 	notDoneTodos := make(TodoList, 0)
@@ -242,18 +247,13 @@ func TidyTodos(todos *TodoList) *TodoList { // TODO to optimize
 	}
 
 	// Reassign ids
-	for i := 0; i < len(*todos); i++ {
-		todo := newTodos[i]
-		splits := strings.Split(todo.Id, "-")
-		prefixPart := strings.Join(splits[:len(splits)-1], "-")
-		if len(prefixPart) != 0 {
-			prefixPart = prefixPart + "-"
-		} else {
-			prefixPart = ""
-		}
-		todo.Id = prefixPart + strconv.Itoa(i+1)
+	if len(parentId) != 0 {
+		parentId += "-"
+	}
+	for i, todo := range newTodos {
+		todo.Id = parentId + strconv.Itoa(i+1)
 		if len(*todo.Todos) != 0 {
-			todo.Todos = TidyTodos(todo.Todos)
+			todo.Todos = tidyTodos(todo.Todos, todo.Id)
 		}
 	}
 
