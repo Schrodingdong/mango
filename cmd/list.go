@@ -1,18 +1,22 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/schrodingdong/mango/utils"
 	"github.com/spf13/cobra"
 )
 
 var isUrgent bool
 var number int
+var todoId string
 
 func init() {
 	listCmd.PersistentFlags().BoolVar(&isUrgent, "urgent", false, "List urgent todos")
 	listCmd.PersistentFlags().BoolVar(&isDone, "done", false, "List done todos")
 	listCmd.PersistentFlags().IntVarP(&number, "number", "n", 0, "number of displayed todos")
 	listCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
+	listCmd.PersistentFlags().StringVar(&todoId, "id", "", "Id of the todo to display")
 	rootCmd.AddCommand(listCmd)
 }
 
@@ -32,8 +36,27 @@ var listCmd = &cobra.Command{
 			slicedTodos := (*todos)[:number]
 			todos = &slicedTodos
 		}
-		printTodos(todos)
+		if todoId != "" {
+			todo, err := utils.GetTodo(todoId, todos)
+			if err != nil {
+				log.Fatal(err)
+			}
+			printTodo(todo)
+		} else {
+			printTodos(todos)
+		}
 	},
+}
+
+func printTodo(todo *utils.Todo) {
+	if verbose {
+		todo.PrintTodoDetail()
+	} else {
+		todo.PrintTodoOneLine()
+	}
+	if todo.Todos != nil || len(*todo.Todos) != 0 {
+		printTodos(todo.Todos)
+	}
 }
 
 func printTodos(todos *utils.TodoList) {
