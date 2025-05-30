@@ -36,6 +36,9 @@ var listCmd = &cobra.Command{
 			slicedTodos := (*todos)[:number]
 			todos = &slicedTodos
 		}
+		if len(args) > 0 {
+			todoId = args[0]
+		}
 		if todoId != "" {
 			todo, err := utils.GetTodo(todoId, todos)
 			if err != nil {

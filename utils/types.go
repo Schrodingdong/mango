@@ -79,15 +79,10 @@ func (todo *Todo) PrintTodoDetail() {
 %s  ├── ID:          %s
 %s  ├── Description: %s
 %s  └── Deadline:    %s`,
-		prefix,
-		status,
-		todo.Title,
-		prefix,
-		todo.Id,
-		prefix,
-		todo.Description,
-		prefix,
-		deadlineStr,
+		prefix, status, todo.Title,
+		prefix, todo.Id,
+		prefix, todo.Description,
+		prefix, deadlineStr,
 	)
 
 	fmt.Println(output)
@@ -106,25 +101,29 @@ func formatDuration(d time.Duration) string {
 }
 
 func (todo *Todo) PrintTodoOneLine() {
-	isDone := "\033[31m- [ ]\033[0m" // Red for incomplete
+	isDone := "- [ ]" // Red for incomplete
 	deadline := ""
 	spacing := strings.Repeat("\t", strings.Count(todo.Id, "-"))
 
 	id := todo.Id
 	title := todo.Title
+	colorPrefix := ""
 	if todo.IsDone {
-		isDone = "\033[32m- [✓]\033[0m" // Green for complete
+		isDone = "- [✓]"
+		colorPrefix = "\033[32m" // Green for complete
 	} else {
 		if !todo.Deadline.IsZero() {
 			timeLeft := time.Until(todo.Deadline)
 			if timeLeft < 0 {
-				deadline = "\033[31m[OVERDUE " + formatDuration(timeLeft) + "]\033[0m"
+				deadline = "[OVERDUE " + formatDuration(timeLeft) + "]\033[0m"
+				colorPrefix = "\033[31m" // Red for overdue
 			} else if timeLeft < 24*time.Hour {
-				deadline = "\033[02m[" + formatDuration(timeLeft) + " left]\033[0m"
+				deadline = "[" + formatDuration(timeLeft) + " left]\033[0m"
+				colorPrefix = "\033[33m" // yellow for close deadline
 			}
 		}
 	}
-	formatString := "%s %s %3s %-32s %s\n"
+	formatString := colorPrefix + "%s %s %3s %-32s %s \033[0m\n"
 	fmt.Printf(
 		formatString,
 		spacing, isDone, id, title, deadline,
