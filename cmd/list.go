@@ -32,9 +32,8 @@ var listCmd = &cobra.Command{
 		if isDone {
 			todos = todos.FilterTodosDone()
 		}
-		if number > 0 {
-			slicedTodos := (*todos)[:number]
-			todos = &slicedTodos
+		if number > 0 && number <= len(*todos) {
+			*todos = (*todos)[:number]
 		}
 		if len(args) > 0 {
 			todoId = args[0]
