@@ -1,0 +1,16 @@
+name: "Build binaries"
+on:
+    push: 
+        branches: ["master"]
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+              goos: ["darwin", "linux"]
+              goarch: ["amd64", "arm64"]
+        steps:
+        - name: Check out repository code
+          uses: actions/checkout@v4
+        - name: Build for ${{ matrix.goos }}-${{ matrix.goarch }}
+          run: env GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build
