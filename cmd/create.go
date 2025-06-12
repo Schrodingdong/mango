@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/schrodingdong/mango/utils"
@@ -35,11 +39,12 @@ var createCmd = &cobra.Command{
 		title := args[0]
 
 		// Add deadline
-		todoDeadline := parseDeadline(deadlineString)
-		if deadlineString != "" {
-			if time.Now().After(todoDeadline) {
-				log.Fatal("Can't have a deadline before now")
-			}
+		todoDeadline, err := parseDeadline(deadlineString)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if time.Now().After(todoDeadline) {
+			log.Fatal("Can't have a deadline before now")
 		}
 
 		// Init todo data
@@ -73,10 +78,69 @@ var createCmd = &cobra.Command{
 /*
 Parse a dedadline string into a `time.Time` object. if an empty string is provided, we get t=0ns.
 */
-func parseDeadline(deadlineString string) time.Time {
-	deadline, err := time.ParseInLocation(time.DateTime, deadlineString, time.Local)
-	if err != nil {
-		return zero
+func parseDeadline(deadlineString string) (time.Time, error) {
+	re := regexp.MustCompile(`(\d+d)?(\d+h)?(\d+m)?(\d+s)?`)
+
+	// check if its dmhs format or normale timedate
+	m := re.FindString(deadlineString)
+	if len(m) == 0 {
+		deadline, err := time.ParseInLocation(time.DateTime, deadlineString, time.Local)
+		if err != nil {
+			return zero, errors.New("wrong timedate syntax. Use either 'xdxhxmxs' or 'yyyy:mm:dd hh:mm:ss'")
+		}
+		return deadline, nil
 	}
-	return deadline
+	matches := re.FindAllStringSubmatch(deadlineString, -1)
+	reformatedTime := ""
+	for i := 0; i < len(matches); i++ {
+		reformatedTime += matches[i][0]
+	}
+	matches = re.FindAllStringSubmatch(reformatedTime, -1)
+	if len(matches) > 1 {
+		return zero, errors.New("wrong timedate syntax. make sure to follow this order 'xdxhxmxs'")
+	}
+	var (
+		days    int
+		hours   int
+		minutes int
+		seconds int
+	)
+	for i := 1; i < len(matches[0]); i++ {
+		v := matches[0][i]
+		if len(v) == 0 {
+			continue
+		}
+		code := v[len(v)-1]
+		value, err := strconv.Atoi(v[:len(v)-1])
+		if err != nil {
+			fmt.Println(err)
+		}
+		switch code {
+		case 'd':
+			days = value
+		case 'h':
+			hours = value
+		case 'm':
+			minutes = value
+		case 's':
+			seconds = value
+		default:
+			return zero, errors.New("wrong timedate syntax. Use either 'xdxhxmxs' or 'yyyy:mm:dd hh:mm:ss'")
+		}
+	}
+	deadline := getFutureTimestamp(days, hours, minutes, seconds)
+	return deadline, nil
+}
+
+func getFutureTimestamp(days int, hours int, minutes int, seconds int) time.Time {
+	SEC_TO_NANO := 1_000_000_000
+	MIN_TO_NANO := 60 * SEC_TO_NANO
+	HOUR_TO_NANO := 60 * MIN_TO_NANO
+	DAY_TO_NANO := 24 * HOUR_TO_NANO
+	duration :=
+		seconds*SEC_TO_NANO +
+			minutes*MIN_TO_NANO +
+			hours*HOUR_TO_NANO +
+			days*DAY_TO_NANO
+	return time.Now().Add(time.Duration(duration))
 }
