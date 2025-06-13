@@ -39,12 +39,15 @@ var createCmd = &cobra.Command{
 		title := args[0]
 
 		// Add deadline
-		todoDeadline, err := parseDeadline(deadlineString)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if time.Now().After(todoDeadline) {
-			log.Fatal("Can't have a deadline before now")
+		todoDeadline := zero
+		if len(deadlineString) != 0 {
+			todoDeadline, err := parseDeadline(deadlineString)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if time.Now().After(todoDeadline) {
+				log.Fatal("Can't have a deadline before now")
+			}
 		}
 
 		// Init todo data
